@@ -4,15 +4,22 @@ set title: "Sudoku"
 set background: '#black'
 
 WINDOW_SIZE = 650
-set width: 800
-set height: 645
+set width: 882
+set height: WINDOW_SIZE
 
 class SudokuSquare
-  def initialize(x, y, value, editable, color, size)
+  def initialize(x, y, value, color, size)
     @x = x
     @y = y  
     @value = value
-    @editable = editable
+    if value != 0 
+      @isInitial = true
+      @editable = false
+    else 
+      @isInitial = false
+      @editable = true
+    end
+    @isHint = false
     @tileColor = color
     @SIZE = size
     @square
@@ -60,7 +67,6 @@ class SudokuSquare
 
   def disable
     @editable = false
-    updateText
   end
 
   def updateText
@@ -69,8 +75,22 @@ class SudokuSquare
     end
 
     if @value != 0
-      textColor = @editable ? '#8c51b0' : 'black'
+      textColor = '#8c51b0'
+      if @isInitial
+        textColor = 'black'
+      elsif @isHint
+        textColor = '#268536'
+      end
+
       @textbox = Text.new(@value, x: @x * @SIZE + (@SIZE/4.2), y: @y * @SIZE, size: @SIZE / 1.2, color: textColor, z: 10)
+    end
+  end
+
+  def makeHint(newValue)
+    if @isHint == false
+      @isHint = true
+      changeValue(newValue)
+      disable
     end
   end
 
@@ -101,12 +121,7 @@ class SudokuBoard
           color = color2
         end
 
-        editable = true
-        if(board[i][j] != 0)
-          editable = false
-        end
-
-        newBoard[i][j] = SudokuSquare.new(i, j, board[i][j], editable, color, size/9)
+        newBoard[i][j] = SudokuSquare.new(i, j, board[i][j], color, size/9)
       end
     end
     return newBoard
@@ -177,82 +192,92 @@ class SudokuBoard
       end
     end
   end
+
+  def makeHintSquare(x,y,value)
+    @board[x][y].makeHint(value)
+  end
 end
 
 class SudokuInput
   def makeButtons
     @newGameButton = Image.new(
-      'newgame.png',
+      'assets/newgame.png',
       x: 665, y: 25,
-      width: 115, height: 60,
+      width: 200, height: 60,
     )
 
     @solutionButton = Image.new(
-      'Solution.png',
+      'assets/solution.png',
       x: 665, y: 125,
-      width: 115, height: 60,
+      width: 200, height: 60,
     )
 
     @hint = Image.new(
-      'hint.png',
+      'assets/hint.png',
       x: 665, y: 225,
-      width: 115, height: 60,
+      width: 200, height: 60,
     )
 
     @check = Image.new(
-      'check.png',
+      'assets/check.png',
       x: 665, y: 325,
-      width: 115, height: 60,
+      width: 200, height: 60,
     )
 
   end
 
   def sureButton
     @sure = Image.new(
-      'sure.png',
+      'assets/sure.png',
       x: 665, y: 425,
-      width: 115, height: 60,
+      width: 200, height: 60,
     )
     return @sure
   end
 
   def yesButton
     @yes = Image.new(
-      'yes.png',
+      'assets/yes.png',
       x: 665, y: 495,
-      width: 55, height: 30,
+      width: 90, height: 40,
     )
     return @yes
   end
 
   def noButton
     @no = Image.new(
-      'no.png',
-      x: 725, y: 495,
-      width: 55, height: 30,
+      'assets/no.png',
+      x: 775, y: 495,
+      width: 90, height: 40,
     )
     return @no
   end
 
+  def validImage
+    @valid = Image.new(
+      'assets/valid.png',
+      x: 665, y: 425,
+      width: 200, height: 60
+    )
+    return @valid
+  end
+
+  def invalidImage
+    @invalid = Image.new(
+      'assets/invalid.png',
+      x: 665, y: 425,
+      width: 200, height: 60
+    )
+    return @invalid
+  end
+
   def winImage
     @win = Image.new(
-      'win.png',
+      'assets/win.png',
       x: 665, y: 425,
-      width: 115, height: 60,
+      width: 200, height: 60,
     )
     return @win
-  end
-
-  def NewGame
-    print "new game"
-  end
-
-  def Hint
-    print "Hint"
-  end
-
-  def Check
-    print "check"
   end
 end
 
@@ -405,15 +430,34 @@ class Sudoku_Solver_Generator
     return new_board
   end
 
+  # This will return false if there is no position for the board to give as a hint.
+  def get_hint(board)
+    usp = get_unsolved_positions(board) # Unsolved positions for the board
+    usp_s = usp.shuffle()               # Randomized
+    if usp_s.length() > 0
+      the_position = usp_s[0]             # Get the position that will be solved.
+      row = the_position[0]
+      col = the_position[1]
+      solved_board = solve(board)
+      if(solved_board == false)
+        return false
+      end
+      correct_value = solved_board[row][col]
+      return [row, col, correct_value]
+    else
+      return false
+    end
+  end
+
 end
 
 # Creating Variables that will be used after starting the game #
+@game_over = false
 @gen_sol = Sudoku_Solver_Generator.new(35)
 new_board = @gen_sol.get_new_board()
 @gameBoard = SudokuBoard.new(new_board, WINDOW_SIZE, 'white', 'gray')
 @input = SudokuInput.new
 @input.makeButtons
-
 # Starting Index for the board movement #
 currentX = 0
 currentY = 0
@@ -423,18 +467,26 @@ on :key_up do |event2|
   if event2.key == 'left'
     if(currentX != 0)
       currentX = currentX - 1
+    else
+      currentX = 8
     end
   elsif event2.key == 'right'
     if(currentX != 8)
       currentX = currentX + 1
+    else
+      currentX = 0
     end
   elsif event2.key == 'up'
     if(currentY != 0)
       currentY = currentY - 1
+    else
+      currentY = 8
     end
   elsif event2.key == 'down'
     if(currentY != 8)
       currentY = currentY + 1
+    else
+      currentY = 0
     end
   end
 
@@ -445,6 +497,28 @@ end
 on :key_down do |event|
     puts event.key
     @gameBoard.changeSquareValue(currentX,currentY,event.key)
+    removeButtons
+end
+
+def removeButtons
+  if(@rSure)
+    @rSure.remove
+  end
+  if(@rYes)
+    @rYes.remove
+  end
+  if(@rNo)
+    @rNo.remove
+  end
+  if(@rWin)
+    @rWin.remove
+  end
+  if(@rValid)
+    @rValid.remove
+  end
+  if(@rInvalid)
+    @rInvalid.remove
+  end
 end
 
 # Used for the mouse clicking on a button #
@@ -453,51 +527,97 @@ on :mouse_down do |event3|
   x = event3.x
   y = event3.y
   # For New Game Button #
-  if x.between?(665, 780) && y.between?(25, 85)
-    #if @rWin.defined? == true
-    #  @rWin.remove
-    #end
+  if x.between?(665, 865) && y.between?(25, 85)
+    removeButtons
     @gameBoard.removeBoard
     board = @gen_sol.get_new_board
-    @gameBoard = SudokuBoard.new(board, WINDOW_SIZE, 'white', 'gray')
+    @gameBoard = SudokuBoard.new(board, WINDOW_SIZE, 'white', '#999999')
     currentX = 0
     currentY = 0
+    @game_over = false
+    @tick = 0
+    @timer = 0
 
   # For Solution Button #
-  elsif x.between?(665, 780) && y.between?(125, 185)
-    @rSure = @input.sureButton
-    @rYes = @input.yesButton
-    @rNo = @input.noButton
+  elsif x.between?(665, 865) && y.between?(125, 185)
+    if(!@game_over)
+      removeButtons
+      @rSure = @input.sureButton
+      @rYes = @input.yesButton
+      @rNo = @input.noButton
+    end
   # For Hint Button #
-  elsif x.between?(665, 780) && y.between?(225, 285)
-    @input.Hint
+  elsif x.between?(665, 865) && y.between?(225, 285)
+    if(!@game_over)
+      hint = @gen_sol.get_hint(@gameBoard.getCurrentBoard)
+      if hint != false
+        @gameBoard.makeHintSquare(hint[0], hint[1], hint[2])
+      else
+        hint = @gen_sol.get_hint(@gameBoard.getBaseBoard)
+        if hint != false
+          @gameBoard.makeHintSquare(hint[0], hint[1], hint[2])
+        end
+      end
+    end
   # For Check Button #
-  elsif x.between?(665, 780) && y.between?(325, 385)
-    currentBoard = @gameBoard.getCurrentBoard
-    solvedBoard = @gen_sol.solve(currentBoard)
-    if solvedBoard == false
-      p 'Somethings wrong!'
-    else
-      @rWin = @input.winImage
+  elsif x.between?(665, 865) && y.between?(325, 385)
+    if(!@game_over)
+      removeButtons
+      
+      currentBoard = @gameBoard.getCurrentBoard
+      
+      full = true
+      for i in 0..8
+        for j in 0..8
+          if(currentBoard[i][j] == 0)
+            full = false
+          end
+        end
+      end
+
+      solvedBoard = @gen_sol.solve(currentBoard)
+      if solvedBoard == false
+        @rInvalid = @input.invalidImage
+      elsif full
+        @rWin = @input.winImage
+        @game_over = true
+      else
+        @rValid = @input.validImage
+      end
     end
   end
 end
 
 on :mouse_down do |event3|
-  def removeButton
-    @rYes.remove
-    @rNo.remove
-    @rSure.remove
-  end
   # x and y coordinates of the mouse button event
   x = event3.x
   y = event3.y
-  if x.between?(665, 720) && y.between?(495, 525)
+  if x.between?(665, 755) && y.between?(495, 535)
     solvedBoard = @gen_sol.solve(@gameBoard.getBaseBoard)
     @gameBoard.replaceSolvedBoard(solvedBoard)
-    removeButton
-  elsif x.between?(725, 780) && y.between?(495, 525)
-    removeButton
+    @game_over = true
+    removeButtons
+  elsif x.between?(775, 865) && y.between?(495, 535)
+    removeButtons
+  end
+end
+
+@tick = 0
+@timer = 0
+@timerText = Text.new(@timer, x: WINDOW_SIZE + 20, y: WINDOW_SIZE - 60, size: 40, color: 'white', z: 10)
+update do
+  if(!@game_over)
+    if @tick % 60 == 0
+      @timer += 1
+      @timerText.remove
+      text = @timer.div(60).to_s + ":"
+      if @timer % 60 < 10
+        text += '0'
+      end
+      text += (@timer % 60).to_s
+      @timerText = Text.new(text, x: WINDOW_SIZE+ 20, y: WINDOW_SIZE - 60, size: 40, color: 'white', z: 10)
+    end
+    @tick += 1
   end
 end
 
