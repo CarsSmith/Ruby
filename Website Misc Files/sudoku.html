@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Sudoku Program</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+    <div class="header">
+      <img class="logo" src="Ruby-logo.png" alt="The Ruby Logo" height="50px" width="50px">
+		  <p>Ruby</p>
+    </div>
+
+    <div id="home-main-content">
+      <div id="example-p">
+   	  <h1>Sudoku Program</h1>
+      <p>For our large-scale project, our team took up the task of learning a new Ruby Framework, Ruby2D, and making a fully-functional Sudoku game GUI. In order to run this program, you first need to install the Ruby2D gem with the following command:</p>
+      <div id="example-block">
+      <pre><code>ruby gem install Ruby2D</code></pre>
+      </div>
+      <p>Once you have the Ruby2D gem installed, you simply need to enter the following command from within the folder that you have the program and it's asset files in:</p>
+      <div id="example-block">
+      <pre><code>ruby Sudoku.rb</code></pre>
+      </div>
+      <p><a href="https://github.com/GrazeDD/Ruby/tree/master/Sudoku">Here</a> is a link to our Github page with all the associated files for the program.</p>
+      <h2>Sudoku.rb Code</h2>
+      <div id="example-block">
+      <pre><code>require 'ruby2d'
+
+set title: "Sudoku"
+set background: '#black'
+
+WINDOW_SIZE = 650
+set width: 882
+set height: WINDOW_SIZE
+
+class SudokuSquare
+  def initialize(x, y, value, color, size)
+    @x = x
+    @y = y  
+    @value = value
+    if value != 0 
+      @isInitial = true
+      @editable = false
+    else 
+      @isInitial = false
+      @editable = true
+    end
+    @isHint = false
+    @tileColor = color
+    @SIZE = size
+    @square
+    @textbox
+    drawInitial
+  end
+
+  def drawInitial
+    @square = Square.new(x: @x * @SIZE, y: @y * @SIZE, size: (@SIZE - @SIZE.div(18)), color: @tileColor)
+    updateText
+  end
+
+  def getValue
+    return @value
+  end
+
+  def changeValue(newValue)
+    if(newValue.is_a?(Integer))
+      newValue = newValue.to_s
+    end
+
+    if(@editable)
+      if(('0'..'9').include? newValue.chomp)
+        @value = newValue.chomp.to_i
+        updateText
+      end
+    end
+  end
+
+
+
+  def isEditable
+    return @editable
+  end
+
+  def select 
+    @square.remove
+    @square = Square.new(x: @x * @SIZE, y: @y * @SIZE, size: (@SIZE - @SIZE.div(18)), color: 'yellow')
+  end
+
+  def deselect
+    @square.remove
+    @square = Square.new(x: @x * @SIZE, y: @y * @SIZE, size: (@SIZE - @SIZE.div(18)), color: @tileColor)
+  end
+
+  def disable
+    @editable = false
+  end
+
+  def updateText
+    if @textbox
+      @textbox.remove
+    end
+
+    if @value != 0
+      textColor = '#8c51b0'
+      if @isInitial
+        textColor = 'black'
+      elsif @isHint
+        textColor = '#268536'
+      end
+
+      @textbox = Text.new(@value, x: @x * @SIZE + (@SIZE/4.2), y: @y * @SIZE, size: @SIZE / 1.2, color: textColor, z: 10)
+    end
+  end
+
+  def makeHint(newValue)
+    if @isHint == false
+      @isHint = true
+      changeValue(newValue)
+      disable
+    end
+  end
+
+  def remove
+    @square.remove
+    if(@textbox)
+      @textbox.remove
+    end
+  end
+end
+
+class SudokuBoard
+
+  def initialize(board, size, color1, color2)
+    @board = makeBoard(board, size, color1, color2)
+    @selectedX = 0
+    @selectedY = 0
+    selectSquare(@selectedX,@selectedY)
+  end
+
+  def makeBoard(board, size, color1, color2)
+    newBoard = Array.new(9) {Array.new(9)}
+    for i in 0..8 do
+      for j in 0..8 do
+        #for creating 3x3 pattern in grid
+        color = color1
+        if (i.div(3) == 1 && j.div(3) != 1) || (i.div(3) != 1 && j.div(3) == 1)
+          color = color2
+        end
+
+        newBoard[i][j] = SudokuSquare.new(i, j, board[i][j], color, size/9)
+      end
+    end
+    return newBoard
+  end
+
+  #gets board with current digits
+  def getCurrentBoard
+    currentBoard = Array.new(9) {Array.new(9)}
+    for i in 0..8 do
+      for j in 0..8 do
+        currentBoard[i][j] = @board[i][j].getValue
+      end
+    end
+    return currentBoard
+  end
+
+  #gets base board without user input digits
+  def getBaseBoard
+    baseBoard = Array.new(9) {Array.new(9)}
+    for i in 0..8 do
+      for j in 0..8 do
+        if(@board[i][j].isEditable)
+          baseBoard[i][j] = 0
+        else
+          baseBoard[i][j] = @board[i][j].getValue
+        end
+      end
+    end
+    return baseBoard
+  end
+
+  def getSquareValue(x,y)
+    return @board[x][y].getValue
+  end
+
+  def changeSquareValue(x,y,value)
+    @board[x][y].changeValue(value)
+  end
+
+  def isSquareEditable(x,y,value)
+    return @board[x][y].isEditable
+  end
+
+  def disableSquare(x,y)
+    @board[x][y].disable
+  end
+
+  def selectSquare(x,y)
+    @board[@selectedX][@selectedY].deselect
+    @board[x][y].select
+    @selectedX = x
+    @selectedY = y
+  end
+
+  def replaceSolvedBoard(board)
+    for i in 0..8 do
+      for j in 0..8 do
+        @board[i][j].changeValue(board[i][j])
+        @board[i][j].disable
+      end
+    end
+  end
+
+  def removeBoard
+    for i in 0..8 do
+      for j in 0..8 do
+        @board[i][j].remove
+      end
+    end
+  end
+
+  def makeHintSquare(x,y,value)
+    @board[x][y].makeHint(value)
+  end
+end
+
+class SudokuInput
+  def makeButtons
+    @newGameButton = Image.new(
+      'newgame.png',
+      x: 665, y: 25,
+      width: 200, height: 60,
+    )
+
+    @solutionButton = Image.new(
+      'Solution.png',
+      x: 665, y: 125,
+      width: 200, height: 60,
+    )
+
+    @hint = Image.new(
+      'hint.png',
+      x: 665, y: 225,
+      width: 200, height: 60,
+    )
+
+    @check = Image.new(
+      'check.png',
+      x: 665, y: 325,
+      width: 200, height: 60,
+    )
+
+  end
+
+  def sureButton
+    @sure = Image.new(
+      'sure.png',
+      x: 665, y: 425,
+      width: 200, height: 60,
+    )
+    return @sure
+  end
+
+  def yesButton
+    @yes = Image.new(
+      'yes.png',
+      x: 665, y: 495,
+      width: 90, height: 40,
+    )
+    return @yes
+  end
+
+  def noButton
+    @no = Image.new(
+      'no.png',
+      x: 775, y: 495,
+      width: 90, height: 40,
+    )
+    return @no
+  end
+
+  def validImage
+    @valid = Image.new(
+      'valid.png',
+      x: 665, y: 425,
+      width: 200, height: 60
+    )
+    return @valid
+  end
+
+  def invalidImage
+    @invalid = Image.new(
+      'invalid.png',
+      x: 665, y: 425,
+      width: 200, height: 60
+    )
+    return @invalid
+  end
+
+  def winImage
+    @win = Image.new(
+      'win.png',
+      x: 665, y: 425,
+      width: 200, height: 60,
+    )
+    return @win
+  end
+end
+
+class Sudoku_Solver_Generator
+  def initialize(s_number)
+    @s_number = s_number
+  end
+
+  def get_unsolved_positions(board)
+    us_positions = []
+    for row in 0...9 do # Getting the rows
+      for col in 0...9 # Getting the columns
+        if board[row][col] == "0" || board[row][col] == 0
+          us_positions.push([row, col])
+        end
+      end
+    end
+    return us_positions
+  end
+
+  # Ensures that a location is valid for a number in all 3 ways, row, column, and block.
+  def validate_position(board, row, col, number)
+    position_row = row
+    position_col = col
+    # Checks the row to ensure there's no duplicate while also checking the column to ensure there's no duplicate.
+    for val in 0...9 do
+      if board[val][position_col] == number || board[position_row][val] == number
+        return false
+      end
+    end
+
+    # Defining the boundaries of the block that the given position falls into...
+    block_row_min = position_row / 3 * 3      # Abusing integer division to get the lower bound for the rows.
+    block_row_max = block_row_min + 3         # Max is just 3 higher than that.
+    block_col_min = position_col / 3 * 3      # Abusing integer division to get the lower bound for the columns.
+    block_col_max = block_col_min + 3         # Max is just 3 higher than that.
+
+    # Checks that the given position is valid, given the dimensions calculated above...
+    for row in block_row_min...block_row_max do
+      for col in block_col_min...block_col_max do # Simple double for-loop with an if statement.
+        if board[row][col] == number
+          return false
+        end
+      end
+    end
+    return true
+  end
+
+  def get_new_board
+    new_board = get_blank_board
+    temp_solution = solve(new_board)
+    if temp_solution == false
+      return false
+    else 
+      game_board = remove_values(temp_solution)
+      return game_board
+    end
+  end
+
+  def remove_values(board)
+    positions = generate_random_positions()
+
+    for pos in positions do 
+      board[pos[0]][pos[1]] = 0
+    end
+    return board
+  end
+
+  def generate_random_positions()
+    all_positions = []
+    for row in 0...9 do
+      for col in 0...9 do
+        all_positions.push([row, col])
+      end
+    end
+    shuffled_positions = all_positions.shuffle()
+    random_position_array = shuffled_positions.drop(@s_number)
+    return random_position_array
+  end
+
+  def solve(board)\
+
+    # This is a simple check to ensure that the initial board isn't invalid from the beginning, causing solve() to run infinitely.
+    for row in 0...9 do
+      for col in 0...9 do
+        number = board[row][col]
+        if number != 0
+          board[row][col] = 0           # Needed for the way validate_position is implemented.
+          if validate_position(board, row, col, number) == false
+            board[row][col] = number  # Needed for the way validate_position is implemented.
+            return false
+          end
+        board[row][col] = number      # Needed for the way validate_position is implemented.
+        end
+      end
+    end
+
+    unsolved_positions = get_unsolved_positions(board)
+    oops_count = 0
+    # unsolved_positions will be unchanged throughout the execution of solve(). 
+    posit_count = 0 # A count variable for going over the unsolved positions.
+    while posit_count < unsolved_positions.length
+      #p posit_count
+      unsolved_row = unsolved_positions[posit_count][0]               # Getting the col to check
+      unsolved_col = unsolved_positions[posit_count][1]               # Getting the row to check
+      experimental_number = board[unsolved_row][unsolved_col] + 1   # Getting the number and setting it to 1 by default.
+      found = false                                                 # A flag to keep track of whether or not we need to backtrack.
+      # This while block will increment the experimental_number over and over until it's found a valid position, where it will be set.
+      while experimental_number < 10 && found == false              # Trying all the numbers, as long as the number is a valid one.
+        if validate_position(board, unsolved_row, unsolved_col, experimental_number) # If it's a valid place to put the number...
+          posit_count = posit_count + 1                             # Increment the position count.
+          board[unsolved_row][unsolved_col] = experimental_number # Set the value on the board.
+          found = true                                          # Trip the found flag.
+        else                                                      # Otherwise...
+          experimental_number = experimental_number + 1         # Increment the number we are brute forcing. 
+        end
+      end
+
+      # This while block checks for the condition where the found boolean flag is never tripped via the above while loop.
+      if found == false
+        oops_count = oops_count + 1
+        posit_count = posit_count - 1             # De-increment count so the focus of the outer while loop goes back to the last position.
+        board[unsolved_row][unsolved_col] = 0 # Reset the value of the board space that was being brute-forced.
+      end
+
+      if posit_count < 0
+        return false
+      end
+      if oops_count > 200000
+        return false
+      end
+    end
+    return board
+  end
+
+
+  def get_blank_board
+    new_board = [[0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0]]
+    list = [1,2,3,4,5,6,7,8,9]
+    list = list.shuffle
+    new_board[0] = list
+    return new_board
+  end
+
+  # This will return false if there is no position for the board to give as a hint.
+  def get_hint(board)
+    usp = get_unsolved_positions(board) # Unsolved positions for the board
+    usp_s = usp.shuffle()               # Randomized
+    if usp_s.length() > 0
+      the_position = usp_s[0]             # Get the position that will be solved.
+      row = the_position[0]
+      col = the_position[1]
+      solved_board = solve(board)
+      if(solved_board == false)
+        return false
+      end
+      correct_value = solved_board[row][col]
+      return [row, col, correct_value]
+    else
+      return false
+    end
+  end
+
+end
+
+# Creating Variables that will be used after starting the game #
+@game_over = false
+@gen_sol = Sudoku_Solver_Generator.new(35)
+new_board = @gen_sol.get_new_board()
+@gameBoard = SudokuBoard.new(new_board, WINDOW_SIZE, 'white', 'gray')
+@input = SudokuInput.new
+@input.makeButtons
+# Starting Index for the board movement #
+currentX = 0
+currentY = 0
+
+# Used for the movement of keys #
+on :key_up do |event2|
+  if event2.key == 'left'
+    if(currentX != 0)
+      currentX = currentX - 1
+    else
+      currentX = 8
+    end
+  elsif event2.key == 'right'
+    if(currentX != 8)
+      currentX = currentX + 1
+    else
+      currentX = 0
+    end
+  elsif event2.key == 'up'
+    if(currentY != 0)
+      currentY = currentY - 1
+    else
+      currentY = 8
+    end
+  elsif event2.key == 'down'
+    if(currentY != 8)
+      currentY = currentY + 1
+    else
+      currentY = 0
+    end
+  end
+
+  @gameBoard.selectSquare(currentX,currentY)
+end
+
+# Used for the user input in the sudoku board #
+on :key_down do |event|
+    puts event.key
+    @gameBoard.changeSquareValue(currentX,currentY,event.key)
+    removeButtons
+end
+
+def removeButtons
+  if(@rSure)
+    @rSure.remove
+  end
+  if(@rYes)
+    @rYes.remove
+  end
+  if(@rNo)
+    @rNo.remove
+  end
+  if(@rWin)
+    @rWin.remove
+  end
+  if(@rValid)
+    @rValid.remove
+  end
+  if(@rInvalid)
+    @rInvalid.remove
+  end
+end
+
+# Used for the mouse clicking on a button #
+on :mouse_down do |event3|
+  # x and y coordinates of the mouse button event
+  x = event3.x
+  y = event3.y
+  # For New Game Button #
+  if x.between?(665, 865) && y.between?(25, 85)
+    removeButtons
+    @gameBoard.removeBoard
+    board = @gen_sol.get_new_board
+    @gameBoard = SudokuBoard.new(board, WINDOW_SIZE, 'white', '#999999')
+    currentX = 0
+    currentY = 0
+    @game_over = false
+    @tick = 0
+    @timer = 0
+
+  # For Solution Button #
+  elsif x.between?(665, 865) && y.between?(125, 185)
+    if(!@game_over)
+      removeButtons
+      @rSure = @input.sureButton
+      @rYes = @input.yesButton
+      @rNo = @input.noButton
+    end
+  # For Hint Button #
+  elsif x.between?(665, 865) && y.between?(225, 285)
+    if(!@game_over)
+      hint = @gen_sol.get_hint(@gameBoard.getCurrentBoard)
+      if hint != false
+        @gameBoard.makeHintSquare(hint[0], hint[1], hint[2])
+      else
+        hint = @gen_sol.get_hint(@gameBoard.getBaseBoard)
+        if hint != false
+          @gameBoard.makeHintSquare(hint[0], hint[1], hint[2])
+        end
+      end
+    end
+  # For Check Button #
+  elsif x.between?(665, 865) && y.between?(325, 385)
+    if(!@game_over)
+      removeButtons
+      
+      currentBoard = @gameBoard.getCurrentBoard
+      
+      full = true
+      for i in 0..8
+        for j in 0..8
+          if(currentBoard[i][j] == 0)
+            full = false
+          end
+        end
+      end
+
+      solvedBoard = @gen_sol.solve(currentBoard)
+      if solvedBoard == false
+        @rInvalid = @input.invalidImage
+      elsif full
+        @rWin = @input.winImage
+        @game_over = true
+      else
+        @rValid = @input.validImage
+      end
+    end
+  end
+end
+
+on :mouse_down do |event3|
+  # x and y coordinates of the mouse button event
+  x = event3.x
+  y = event3.y
+  if x.between?(665, 755) && y.between?(495, 535)
+    solvedBoard = @gen_sol.solve(@gameBoard.getBaseBoard)
+    @gameBoard.replaceSolvedBoard(solvedBoard)
+    @game_over = true
+    removeButtons
+  elsif x.between?(775, 865) && y.between?(495, 535)
+    removeButtons
+  end
+end
+
+@tick = 0
+@timer = 0
+@timerText = Text.new(@timer, x: WINDOW_SIZE + 20, y: WINDOW_SIZE - 60, size: 40, color: 'white', z: 10)
+update do
+  if(!@game_over)
+    if @tick % 60 == 0
+      @timer += 1
+      @timerText.remove
+      text = @timer.div(60).to_s + ":"
+      if @timer % 60 < 10
+        text += '0'
+      end
+      text += (@timer % 60).to_s
+      @timerText = Text.new(text, x: WINDOW_SIZE+ 20, y: WINDOW_SIZE - 60, size: 40, color: 'white', z: 10)
+    end
+    @tick += 1
+  end
+end
+
+show</code></pre>
+      </div>
+      </div>
+    </div>
+
+    <div id="sidebar">
+        <div class="nav">
+            <strong>Navigation</strong>
+            <ul>
+                <li>
+                    <a href="/~jbuffenb/classes/354/teams/shad/">Home</a>
+                </li>
+                <li>
+                    <a href="./history.html">Description and History</a>
+                </li>
+                <li>
+                    <a href="./TransIntall.html">Translators/Installation</a>
+                </li>
+                <li> 
+                    <a href="./information.html">Information</a>
+                </li>
+                <li>
+                    <a href="./documentation.html" class="active">Documentation</a>
+                </li>
+                <li>
+                    <a href="./examples.html">Example Programs</a>
+                    <ul>
+                        <li><a href="./examples.html#carson">Carson's Programs</a></li>
+                        <li><a href="./examples.html#angel">Angel's Programs</a></li>
+                        <li><a href="./examples.html#andrew">Andrew's Programs</a></li>
+                        <li><a href="./examples.html#devan">Devan's Programs</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="./sudoku.html">Sudoku</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

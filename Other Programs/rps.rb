@@ -40,7 +40,7 @@ class RockPaperScissors
   
   # Starts a new round
   def newRound
-    roundsNeededToWin = totalRounds/2
+    roundsNeededToWin = @totalRounds/2
     @playerChoice = nil
 
     # If all rounds are complete or one of the players

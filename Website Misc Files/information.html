@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Ruby - Information</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+    <div class="header">
+          <img class="logo" src="Ruby-logo.png" alt="The Ruby Logo" height="50px" width="50px">
+          <p>Ruby</p>
+    </div>
+
+    <div id="home-main-content">
+    <div id="history">
+        <h1>Ruby Information</h1>
+      <h2>Syntax Information:</h2>
+      <p>Ruby was designed to have very simple syntax, having an emphasis on easy to read code. All whitespace and tabs are ignored, and each line is interpreted as one statement, so ending characters are not necessary.</p>
+      <p>However, you can explicitly end a line with a semicolon. In each block of code then Ruby will look for "end" to end the current block. Comments in ruby are done by using the character('#') for inline comments. When doing block comments you can use "=begin" which starts the comment and "=end" which ends the comment. </p>
+      <h3>Methods:</h3>
+      <p>Ruby methods are similar to many other programming languages, methods are used to bundle one or more statements into one simple unit. However, method names should start with a lowercase, because if they start with an uppercase Ruby might think that it is a constant and not parse the method correctly.</p>
+      <p>Methods can be called with or without parantheses, and each method returns exactly one object. If no return value is specified, Ruby returns the last evaluated statement.</p>
+      <h3>Variables:</h3>
+      <p>Ruby has four main variables types, each have different scope and must begin with different characters:</p>
+      <ul>
+        <li>Local Variables (_ or [A-Z]) - Defined in a method and cannot be accessed outside of that method. </li>
+        <li>Instance Variables (@) - Available across methods for a particular instance of a class. </li>
+        <li>Class Variables (@@) - Available to the class and all instances of the class. </li>
+        <li>Global Variables ($) - Available across classes and anywhere in the program.</li>
+      </ul>
+      <p>Note: it is typically considered bad practice to use global variables in a Ruby program since it breaks encapsulation.</p>
+      <h3>Scripting Language:</h3>
+      <p>Ruby has no main method, at runtime it will execute statements line by line.</p>
+      <h3>Dynamically and Strongly Typed:</h3>
+      <p>Ruby is dynamically typed, meaning that it determines the type of a variable at runtime. A variable can change types during runtime, but since Ruby is strongly typed it expects a variable to act like its current specified type. For example: if you have a variable with type string of "3", and an integer with value 1, you can't add the two together to get 4 without first converting the string "3" into a number.</p>
+      <h3>Object Oriented:</h3>
+      <p>Ruby is a pure object-oriented language, meaning everything in Ruby is treated as an object. Primitive data types, instances of a class, and even a class itself are all treated as
+      objects. The keyword "class" is used to define the blueprint for a data type. Classes can contain other classes inside itself, as well as methods that manipulate the data within the class.</p>
+      <h3>Creating an Instance of a Class:</h3>
+      <p>A new instance of a class can be created using the "new" keyword. The "new" keyword will create a new object based on the blueprint provided by the class, and will then call the "initialize" method if it exists within the class. The initialize method acts as a constructor and should be used to initialize values for class and instance variables of an object.</p>
+      <h2>Language Comparison Table</h2>
+      <table>
+      <tr>
+        <th></th>
+        <th>Ruby</th>
+        <th>Smalltalk</th>
+        <th>Python</th>
+	<th>Perl</th>
+      </tr>
+      <tr>
+        <td>Object-Oriented</td>
+        <td>Pure</td>
+        <td>Pure</td>
+        <td>Hybrid</td>
+	<td>Add-on/Hybrid</td>
+      </tr>
+      <tr>
+        <td>Static/Dynamic Typed</td>
+        <td>Dynamic</td>
+        <td>Dynamic</td>
+        <td>Dynamic</td>
+	<td>Dynamic</td>
+      </tr>
+      <tr>
+        <td>Inheritance</td>
+        <td>Single</td>
+        <td>Single</td>
+        <td>Multiple</td>
+	<td>Multiple</td>
+      </tr>
+      <tr>
+        <td>Higher Order Functions</td>
+        <td>Blocks</td>
+        <td>Blocks</td>
+        <td>Lambda Expressions</td>
+	<td>Yes(???)</td>
+      </tr>
+      <tr>
+        <td>Lexically Scoped</td>
+        <td>Yes (blocks)</td>
+        <td>Yes (blocks)</td>
+        <td>Yes</td>
+	<td>Yes</td>
+      </tr>
+      <tr>
+        <td>Garbage Collection</td>
+        <td>Mark and Sweep</td>
+        <td>Mark and Sweep or Generational</td>
+        <td>Reference Counting</td>
+	<td>Reference Counting</td>
+      </tr>
+      <tr>
+        <td>Class/Methods</td>
+        <td>Yes</td>
+        <td>Yes</td>
+        <td>No</td>
+	<td>No</td>
+      </tr>
+      <tr>
+        <td>Multithreaded</td>
+        <td>Yes</td>
+        <td>Implementation-Dependent</td>
+        <td>Yes</td>
+	<td>No</td>
+      </tr>
+      <tr>
+        <td>Regular Expressions</td>
+        <td>Built-in</td>
+        <td>No</td>
+        <td>Standard Library</td>
+	<td>Built-in</td>
+      </tr>
+      <tr>
+        <td>Encapsulation</td>
+        <td>Yes</td>
+        <td>Yes</td>
+        <td>No</td>
+	<td>Yes?</td>
+      </tr>
+      <tr>
+        <td>Polymorphism</td>
+        <td>Yes</td>
+        <td>Yes</td>
+        <td>Yes</td>
+	<td>Yes?</td>
+      </tr>
+      <tr>
+	<td>Compiled/Interpreted</td>
+	<td>Compiled</td>
+	<td>Both</td>
+	<td>Interpreted</td>
+	<td>Interpreted</td>
+      </tr>
+      <tr>
+        <td>All predefined types are Objects</td>
+        <td>Yes</td>
+        <td>Yes</td>
+        <td>Yes</td>
+	<td>No</td>
+      </tr>
+      <tr>
+        <td>All operations are messages to Objects</td>
+        <td>Yes</td>
+        <td>Yes</td>
+        <td>No</td>
+	<td>No</td>
+      </tr>
+      <tr>
+        <td>All user defined types are Objects</td>
+        <td>Yes</td>
+        <td>Yes</td>
+        <td>Yes</td>
+	<td>No</td>
+      </tr>
+      </table>
+      </div>
+    </div>
+
+    <div id="sidebar">
+        <div class="nav">
+            <strong>Navigation</strong>
+            <ul>
+                <li>
+                    <a href="/~jbuffenb/classes/354/teams/shad/">Home</a>
+                </li>
+                <li>
+                    <a href="./history.html">Description and History</a>
+                </li>
+                <li>
+                    <a href="./TransIntall.html">Translators/Installation</a>
+                </li>
+                <li> 
+                    <a href="./information.html">Information</a>
+                </li>
+                <li>
+                    <a href="./documentation.html" class="active">Documentation</a>
+                </li>
+                <li>
+                    <a href="./examples.html">Example Programs</a>
+                    <ul>
+                        <li><a href="./examples.html#carson">Carson's Programs</a></li>
+                        <li><a href="./examples.html#angel">Angel's Programs</a></li>
+                        <li><a href="./examples.html#andrew">Andrew's Programs</a></li>
+                        <li><a href="./examples.html#devan">Devan's Programs</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="./sudoku.html">Sudoku</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
